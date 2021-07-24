@@ -785,7 +785,7 @@ func NewSwitchboardResponseWithSwitchboardError(value *SwitchboardError) *Switch
 	return &ret
 }
 
-func (m *SwitchboardResponse) GetAuthResponse() *AuthResponse {
+func (m *SwitchboardResponse) 	GetAuthResponse() *AuthResponse {
 	if m.tag == nil || *m.tag != SwitchboardResponseTag_AuthResponse {
 		return nil
 	}

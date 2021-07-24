@@ -119,6 +119,7 @@ func (manager *EngineProtoIpcManager) WriteWithID(msg *extint.GatewayWrapper, co
 		return -1, grpc.Errorf(codes.Internal, err.Error())
 	}
 	data, err := proto.Marshal(msg)
+
 	if err != nil {
 		return -1, grpc.Errorf(codes.Internal, err.Error())
 	}
@@ -128,9 +129,9 @@ func (manager *EngineProtoIpcManager) WriteWithID(msg *extint.GatewayWrapper, co
 
 	manager.connMutex.Lock()
 	defer manager.connMutex.Unlock()
-	if logMessageContent {
-		log.Printf("%T: writing '%#v' Proto message to Engine\n", *manager, msg)
-	}
+	// if logMessageContent {
+	log.Printf("==[ %T: writing '%#v' Proto message to Engine\n", *manager, msg)
+	// }
 	return manager.conn.Write(buf.Bytes())
 }
 

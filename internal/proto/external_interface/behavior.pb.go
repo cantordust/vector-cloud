@@ -184,14 +184,18 @@ func (m *BehaviorControlRequest) GetRequestType() isBehaviorControlRequest_Reque
 }
 
 func (m *BehaviorControlRequest) GetControlRelease() *ControlRelease {
+
 	if x, ok := m.GetRequestType().(*BehaviorControlRequest_ControlRelease); ok {
+		fmt.Println("==[ GetControlRelease() OK")
 		return x.ControlRelease
 	}
 	return nil
 }
 
 func (m *BehaviorControlRequest) GetControlRequest() *ControlRequest {
+
 	if x, ok := m.GetRequestType().(*BehaviorControlRequest_ControlRequest); ok {
+		fmt.Println("==[ GetControlRequest() OK")
 		return x.ControlRequest
 	}
 	return nil

@@ -643,10 +643,10 @@ func (service *rpcService) ListAnimations(ctx context.Context, in *extint.ListAn
 				if animName == endOfAnimationList {
 					done = true
 				} else {
-					if strings.Contains(animName, "_avs_") {
-						// VIC-11583 All Alexa animation names contain "_avs_". Prevent these animations from reaching the SDK.
-						continue
-					}
+					// if strings.Contains(animName, "_avs_") {
+					// 	// VIC-11583 All Alexa animation names contain "_avs_". Prevent these animations from reaching the SDK.
+					// 	continue
+					// }
 					var newAnim = extint.Animation{
 						Name: animName,
 					}
@@ -1180,6 +1180,8 @@ func (service *rpcService) BehaviorRequestToGatewayWrapper(request *extint.Behav
 	default:
 		return nil, grpc.Errorf(codes.InvalidArgument, "BehaviorControlRequest.ControlRequest has unexpected type %T", x)
 	}
+
+	log.Println("==[ BehaviorRequestToGatewayWrapper ] msg: ", msg)
 	return msg, nil
 }
 
@@ -1193,19 +1195,24 @@ func (service *rpcService) BehaviorControlRequestHandler(in extint.ExternalInter
 
 	for {
 		request, err := in.Recv()
+		fmt.Println("==[ request: ", request)
+
 		if err != nil {
 			log.Printf("BehaviorControlRequestHandler.close: %s\n", err.Error())
 			return
 		}
-		log.Println("BehaviorControl Incoming Request:", request)
+		log.Println("==[ BehaviorControl Incoming Request:", request)
 
 		msg, err := service.BehaviorRequestToGatewayWrapper(request)
 		if err != nil {
 			log.Println(err)
 			return
 		}
+
 		_, err = engineProtoManager.WriteWithID(msg, connID)
 		if err != nil {
+
+			log.Println("==[ engineProtoManager.WriteWithID(msg, connID) ] error: ", err)
 			return
 		}
 	}
@@ -1291,6 +1298,8 @@ func (service *rpcService) AssumeBehaviorControl(in *extint.BehaviorControlReque
 	if err != nil {
 		return err
 	}
+
+	log.Println("==[ AssumeBehaviorControl ] msg: ", msg)
 
 	_, connID, err := engineProtoManager.Write(msg)
 	if err != nil {
@@ -1894,9 +1903,9 @@ func (service *rpcService) UserAuthentication(ctx context.Context, in *extint.Us
 		return nil, grpc.Errorf(codes.Internal, "User authentication is only available on the robot")
 	}
 
-	if !userAuthLimiter.Allow() {
-		return nil, grpc.Errorf(codes.ResourceExhausted, "Maximum auth rate exceeded. Please wait and try again later.")
-	}
+	// if !userAuthLimiter.Allow() {
+	// 	return nil, grpc.Errorf(codes.ResourceExhausted, "Maximum auth rate exceeded. Please wait and try again later.")
+	// }
 
 	f, authChan := switchboardManager.CreateChannel(gw_clad.SwitchboardResponseTag_AuthResponse, 1)
 	defer f()
@@ -1917,19 +1926,23 @@ func (service *rpcService) UserAuthentication(ctx context.Context, in *extint.Us
 		return nil, grpc.Errorf(codes.Internal, "Failed to retrieve message")
 	}
 	auth := response.GetAuthResponse()
-	code := extint.UserAuthenticationResponse_UNAUTHORIZED
+	// code := extint.UserAuthenticationResponse_UNAUTHORIZED
+	code := extint.UserAuthenticationResponse_AUTHORIZED
 	token := auth.AppToken
-	if auth.Error == cloud_clad.TokenError_NoError {
-		code = extint.UserAuthenticationResponse_AUTHORIZED
 
-		// Force an update of the tokens
-		response := make(chan struct{})
-		tokenManager.ForceUpdate(response)
-		<-response
-		log.Das("sdk.activate", &log.DasFields{})
-	} else {
-		token = ""
-	}
+	log.Println("==[ Token: ", token)
+	// if auth.Error == cloud_clad.TokenError_NoError {
+	// 	code = extint.UserAuthenticationResponse_AUTHORIZED
+
+	// 	// Force an update of the tokens
+	// 	response := make(chan struct{})
+	// 	tokenManager.ForceUpdate(response)
+	// 	<-response
+	// 	log.Das("sdk.activate", &log.DasFields{})
+	// }
+	// else {
+	// 	token = ""
+	// }
 	return &extint.UserAuthenticationResponse{
 		Status: &extint.ResponseStatus{
 			Code: extint.ResponseStatus_RESPONSE_RECEIVED,

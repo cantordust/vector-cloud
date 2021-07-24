@@ -3,9 +3,14 @@
 
 package Anki_Vector_external_interface
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	"log"
+
+	proto "github.com/golang/protobuf/proto"
+
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -1358,6 +1363,7 @@ func (m *UserAuthenticationResponse) GetCode() UserAuthenticationResponse_Code {
 
 func (m *UserAuthenticationResponse) GetClientTokenGuid() []byte {
 	if m != nil {
+		log.Println("==[ m.ClientTokenGuid: ", m.ClientTokenGuid)
 		return m.ClientTokenGuid
 	}
 	return nil

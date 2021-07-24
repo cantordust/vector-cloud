@@ -1,7 +1,7 @@
 .PHONY: docker-builder vic-cloud vic-gateway
 
 docker-builder:
-	docker build -t armbuilder docker-builder/.
+	docker build --network=host -t armbuilder docker-builder/.
 
 all: vic-cloud vic-gateway
 
@@ -9,7 +9,7 @@ go_deps:
 	echo `go version` && cd $(PWD) && go mod download
 
 vic-cloud: go_deps
-	docker container run  \
+	docker container run --network=host  \
 	-v "$(PWD)":/go/src/digital-dream-labs/vector-cloud \
 	-v $(GOPATH)/pkg/mod:/go/pkg/mod \
 	-w /go/src/digital-dream-labs/vector-cloud \
@@ -32,7 +32,7 @@ vic-cloud: go_deps
 
 
 vic-gateway: go_deps
-	docker container run \
+	docker container run --network=host \
 	-v "$(PWD)":/go/src/digital-dream-labs/vector-cloud \
 	-v $(GOPATH)/pkg/mod:/go/pkg/mod \
 	-w /go/src/digital-dream-labs/vector-cloud \

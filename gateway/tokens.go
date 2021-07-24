@@ -14,7 +14,6 @@ import (
 	"github.com/digital-dream-labs/vector-cloud/internal/ipc"
 	"github.com/digital-dream-labs/vector-cloud/internal/log"
 	"github.com/digital-dream-labs/vector-cloud/internal/robot"
-	"github.com/digital-dream-labs/vector-cloud/internal/token"
 
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
@@ -103,25 +102,26 @@ func (ctm *ClientTokenManager) writeTokensFile(data []byte) error {
 func (ctm *ClientTokenManager) CheckToken(clientToken string) (string, error) {
 	ctm.checkValid <- struct{}{}
 	<-ctm.notifyValid
-	if len(ctm.ClientTokens) == 0 {
-		return "", grpc.Errorf(codes.Unauthenticated, "no valid tokens")
-	}
-	recentToken := ctm.ClientTokens[ctm.recentTokenIndex]
-	err := token.CompareHashAndToken(recentToken.Hash, clientToken)
-	if err == nil {
-		return recentToken.ClientName, nil
-	}
-	for idx, validToken := range ctm.ClientTokens {
-		if idx == ctm.recentTokenIndex || len(validToken.Hash) == 0 {
-			continue
-		}
-		err = token.CompareHashAndToken(validToken.Hash, clientToken)
-		if err == nil {
-			ctm.recentTokenIndex = idx
-			return validToken.ClientName, nil
-		}
-	}
-	return "", grpc.Errorf(codes.Unauthenticated, "invalid token")
+	return "Valid", nil
+	// if len(ctm.ClientTokens) == 0 {
+	// 	return "", grpc.Errorf(codes.Unauthenticated, "no valid tokens")
+	// }
+	// recentToken := ctm.ClientTokens[ctm.recentTokenIndex]
+	// err := token.CompareHashAndToken(recentToken.Hash, clientToken)
+	// if err == nil {
+	// 	return recentToken.ClientName, nil
+	// }
+	// for idx, validToken := range ctm.ClientTokens {
+	// 	if idx == ctm.recentTokenIndex || len(validToken.Hash) == 0 {
+	// 		continue
+	// 	}
+	// 	err = token.CompareHashAndToken(validToken.Hash, clientToken)
+	// 	if err == nil {
+	// 		ctm.recentTokenIndex = idx
+	// 		return validToken.ClientName, nil
+	// 	}
+	// }
+	// return "", grpc.Errorf(codes.Unauthenticated, "invalid token")
 }
 
 // DecodeTokenJdoc will update existing valid tokens, from a jdoc received from the server

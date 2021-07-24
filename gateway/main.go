@@ -31,8 +31,8 @@ import (
 // Enables logs about the requests coming and going from the gateway.
 // Most useful for debugging the json output being sent to the app.
 const (
-	logVerbose        = false
-	logMessageContent = false
+	logVerbose        = true
+	logMessageContent = true
 )
 
 var (
@@ -98,14 +98,16 @@ func LoggingStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.
 func verboseHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			name, err := checkAuth(w, r) // Note: we only check here because json will forward to grpc, and doesn't need the same auth
-			if err != nil {
-				http.Error(w, grpc.ErrorDesc(err), http.StatusUnauthorized)
-				return
-			}
-			log.Printf("Authorized connection from '%s'\n", name)
+			// name, err := checkAuth(w, r) // Note: we only check here because json will forward to grpc, and doesn't need the same auth
+			// if err != nil {
+			// 	http.Error(w, grpc.ErrorDesc(err), http.StatusUnauthorized)
+			// 	return
+			// }
+			// log.Printf("Authorized connection from '%s'\n", name)
 			LogRequest(r, "grpc")
 			wrap := WrappedResponseWriter{w, "grpc"}
+
+			log.Println("==[ WrappedResponseWriter] wrap: ", wrap)
 			grpcServer.ServeHTTP(&wrap, r)
 		} else {
 			LogRequest(r, "json")
@@ -188,13 +190,13 @@ func main() {
 	engineProtoManager.Init()
 	defer engineProtoManager.Close()
 
-	if IsOnRobot {
-		switchboardManager.Init()
-		defer switchboardManager.Close()
+	// if IsOnRobot {
+	// 	switchboardManager.Init()
+	// 	defer switchboardManager.Close()
 
-		tokenManager.Init()
-		defer tokenManager.Close()
-	}
+	// 	tokenManager.Init()
+	// 	defer tokenManager.Close()
+	// }
 
 	log.Println("Sockets successfully created")
 
@@ -209,8 +211,8 @@ func main() {
 	)
 
 	userAuthLimiter = NewMultiLimiter(
-		rate.NewLimiter(rate.Every(10*time.Second), 10),
-		rate.NewLimiter(rate.Every(10*time.Minute), 25),
+		rate.NewLimiter(rate.Every(100*time.Second), 100),
+		rate.NewLimiter(rate.Every(100*time.Minute), 100),
 	)
 
 	creds, err := credentials.NewServerTLSFromFile(robot.GatewayCert, robot.GatewayKey)
@@ -282,12 +284,12 @@ func main() {
 		},
 	}
 
-	go engineCladManager.ProcessMessages()
+	// go engineCladManager.ProcessMessages()
 	go engineProtoManager.ProcessMessages()
-	if IsOnRobot {
-		go switchboardManager.ProcessMessages()
-		go tokenManager.StartUpdateListener()
-	}
+	// if IsOnRobot {
+	// 	go switchboardManager.ProcessMessages()
+	// 	go tokenManager.StartUpdateListener()
+	// }
 
 	log.Println("Listening on Port:", Port)
 	err = srv.Serve(tls.NewListener(conn, srv.TLSConfig))
